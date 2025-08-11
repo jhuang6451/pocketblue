@@ -1,0 +1,93 @@
+name: Build Local Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      desktop:
+        description: 'Desktop Environment'
+        required: true
+        default: 'gnome-desktop'
+        type: choice
+        options:
+        - gnome-desktop
+        - gnome-mobile
+        - phosh
+        - plasma-desktop
+        - plasma-mobile
+
+jobs:
+  build:
+    name: Build for mipad5 with ${{ inputs.desktop }}
+    runs-on: ubuntu-24.04-arm
+    
+    steps:
+    - name: Clone the repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    # Step 1: Build base container
+    - name: Build base container
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: pocketblue-base
+        tags: '42'
+        containerfiles: |
+          ./base/Containerfile
+        build-args: |
+          from=fedora:42
+
+    # Step 2: Build desktop container
+    - name: Build desktop container
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: pocketblue-desktop-${{ inputs.desktop }}
+        tags: '42'
+        containerfiles: |
+          ./desktops/${{ inputs.desktop }}/Containerfile
+        build-args: |
+          from=localhost/pocketblue-base:42
+    
+    # Step 3: Build device-specific container
+    - name: Build device container
+      id: build-container
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: pocketblue-final-mipad5-${{ inputs.desktop }}
+        tags: '42'
+        containerfiles: |
+          ./devices/mipad5/Containerfile
+        build-args: |
+          from=localhost/pocketblue-desktop-${{ inputs.desktop }}:42
+
+    # Step 4: Build raw disk image from the local container
+    - name: Build raw disk image
+      id: build-raw
+      uses: osbuild/bootc-image-builder-action@v0.0.2
+      with:
+        config-file: ./config.toml
+        image: ${{ steps.build-container.outputs.image-with-tag }}
+        rootfs: btrfs
+        types: |
+          raw
+
+    # Step 5: Post-process image artifacts
+    - name: Post-process image artifacts
+      env:
+        DEVICE: mipad5
+        IMAGE_NAME: mipad5-${{ inputs.desktop }}
+        IMAGE_TAG: '42'
+        ESP_SIZE: 536870912
+        OUTPUT_DIR: ${{ steps.build-raw.outputs.output-directory }}
+      run: |
+        sudo apt install -y p7zip-full kpartx
+        bash scripts/build_image.sh
+        bash scripts/artifacts_mipad5.sh
+
+    # Step 6: Upload build artifacts
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pocketblue-mipad5-${{ inputs.desktop }}-42
+        path: ./pocketblue-mipad5-${{ inputs.desktop }}-42.7z
+        compression-level: 0
