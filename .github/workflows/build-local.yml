@@ -32,6 +32,7 @@ jobs:
       with:
         image: pocketblue-base
         tags: '42'
+        context: ./base
         containerfiles: |
           ./base/Containerfile
         build-args: |
@@ -43,6 +44,7 @@ jobs:
       with:
         image: pocketblue-desktop-${{ inputs.desktop }}
         tags: '42'
+        context: ./desktops/${{ inputs.desktop }}
         containerfiles: |
           ./desktops/${{ inputs.desktop }}/Containerfile
         build-args: |
@@ -55,6 +57,7 @@ jobs:
       with:
         image: pocketblue-final-mipad5-${{ inputs.desktop }}
         tags: '42'
+        context: ./devices/mipad5
         containerfiles: |
           ./devices/mipad5/Containerfile
         build-args: |
