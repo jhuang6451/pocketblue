@@ -23,6 +23,7 @@ jobs:
       from_image: quay.io/fedora/fedora-bootc
       image: base
       containerfile: base/Containerfile
+      registry: ${{ vars.REGISTRY }}
   devices:
     needs: base
     permissions:
@@ -38,6 +39,7 @@ jobs:
       from_image: ${{ vars.REGISTRY }}/base
       image: ${{ matrix.device }}-base
       containerfile: devices/${{ matrix.device }}/Containerfile
+      registry: ${{ vars.REGISTRY }}
   desktops:
     needs: devices
     permissions:
@@ -54,3 +56,4 @@ jobs:
       from_image: ${{ vars.REGISTRY }}/${{ matrix.device }}-base
       image: ${{ matrix.device }}-${{ matrix.desktop }}
       containerfile: desktops/${{ matrix.desktop }}/Containerfile
+      registry: ${{ vars.REGISTRY }}

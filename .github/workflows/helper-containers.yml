@@ -16,6 +16,10 @@ on:
       containerfile:
         required: true
         type: string
+      registry:
+        required: false
+        type: string
+        default: ${{ vars.REGISTRY }}
 
 jobs:
   build:
@@ -41,6 +45,6 @@ jobs:
         with:
           image: ${{ inputs.image }}
           tags: ${{ inputs.push_tags }}
-          registry: ${{ vars.REGISTRY }}
+          registry: ${{ inputs.registry }}
           username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
