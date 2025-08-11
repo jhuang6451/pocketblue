@@ -41,7 +41,8 @@ RUN dnf -y install \
     NetworkManager-tui \
     git \
     grubby \
-    vim
+    vim \
+    bootc
 
 RUN systemctl enable \
     tqftpserv.service \
