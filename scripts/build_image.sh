@@ -22,6 +22,7 @@ sudo mount -o loop efipart.vfat esp.old
 sudo mount -o loop images/esp.raw esp.new
 
 sudo cp -a esp.old/. esp.new/
+sudo sed -i 's/PARTLABEL=userdata/PARTLABEL=fedora_root/g' esp.new/EFI/fedora/grub.cfg
 sudo umount esp.old/ esp.new/
 sudo chmod 666 images/*
 
